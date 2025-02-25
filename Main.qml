@@ -10,8 +10,8 @@ ApplicationWindow {
     width: 800
     height: 480
     title: "CarShare App"
-    property bool menuOpened: false
-    property bool buttonPressed: true
+
+    property string myUser: ""
 
 
     Rectangle {
@@ -59,6 +59,7 @@ ApplicationWindow {
             visible: false
             anchors.fill: parent
 
+            // FRISO
             Rectangle{
                 x: 0
                 y: 0
@@ -94,6 +95,7 @@ ApplicationWindow {
                 }
             }
 
+            // RESTO DA JANELA
             Rectangle {
                 id: bodyRegister
                 x: 0
@@ -233,11 +235,13 @@ ApplicationWindow {
                 }
                 else{
                     registerUser.close()
-                    codePopup.close()
-                    code.text = ""
+                    menu.close()
+                    bodyMain.visible = false
+                    bodyBoss.visible = false
                 }
             }
 
+            // FRISO
             Rectangle{
                 x: 0
                 y: 0
@@ -305,6 +309,7 @@ ApplicationWindow {
 
                     Button {
                         id: desemparelharButton
+                        objectName: "desemparelharButton"
                         text: "Desemparelhar"
                         font.pointSize: 11
                         anchors.top: parent.top
@@ -314,19 +319,26 @@ ApplicationWindow {
                         bottomPadding: 10
                         leftPadding: 10
                         rightPadding: 10
-                        onClicked: {menu.close(); codePopup.open();}
+                        onClicked: {
+                            menu.close()
+                            if(app.myUser != "123456"){
+                                textAviso.visible = true
+                                timerAviso.start()
+                            }
+                        }
                     }
                 }
             }
 
+            // RESTO DA JANELA
             Rectangle {
-                id: bodyMain
                 x: 0
                 y: 40
                 width: initWindow.width
                 height: initWindow.height - 40
                 color: initWindow.color
 
+                // LINHA A BRANCO
                 Rectangle{
                     x: 0
                     y: 0
@@ -335,6 +347,175 @@ ApplicationWindow {
                     color: "white"
                 }
 
+                // JANELA SE INICAR COM O BOSS PARA DESEMPARELHAR
+                Rectangle {
+                    id: bodyBoss
+                    x: 0
+                    y: 2
+                    width: parent.width
+                    height: parent.height
+                    color: parent.color
+                    visible: false
+
+                    Text{
+                        text: "ADMINISTRADOR"
+                        font.pointSize: 30
+                        color: "black"
+                        anchors.top: parent.top
+                        anchors.topMargin: 170
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+                }
+
+                // JANELA APOS INICIO DE VIAGEM
+                Rectangle {
+                    id: bodyMain
+                    x: 0
+                    y: 2
+                    width: parent.width
+                    height: parent.height
+                    color: parent.color
+                    visible: false
+                    onVisibleChanged: {
+                        if (bodyMain.visible){
+                            timerTrip.start()
+                        }
+                        else{
+                            timerTrip.stop()
+                            timeSeconds = 0
+                            textAviso.visible = false
+                        }
+                    }
+
+                    property int timeSeconds: 0
+
+                    function formatTime(seconds) {
+                        let hours = Math.floor(seconds / 3600);
+                        let minutes = Math.floor((seconds % 3600) / 60);
+                        let secs = seconds % 60;
+                        return (hours < 10 ? "0" : "") + hours + ":" +
+                               (minutes < 10 ? "0" : "") + minutes + ":" +
+                               (secs < 10 ? "0" : "") + secs;
+                    }
+
+                    Timer {
+                        id: timerTrip
+                        interval: 1000
+                        running: false
+                        repeat: true
+                        onTriggered: bodyMain.timeSeconds += 1
+                    }
+
+                    Timer {
+                        id: timerAviso
+                        interval: 2000
+                        running: false
+                        repeat: false
+                        onTriggered: textAviso.visible = false
+                    }
+
+                    Text{
+                        id: textAviso
+                        visible: false
+                        text: "Não tem permissão para desemparelhar o dispositivo"
+                        font.pointSize: 13
+                        color: "#b62e2e"
+                        anchors.top: parent.top
+                        anchors.topMargin: 10
+                        anchors.left: parent.left
+                        anchors.leftMargin: 5
+                        anchors.right: parent.right
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text{
+                        id: textBody1
+                        text: "Aproveite a viagem com o CarShare!"
+                        font.pointSize: 18
+                        color: "black"
+                        anchors.top: textAviso.bottom
+                        anchors.topMargin: 20
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text{
+                        id: textBody2
+                        text: "Conduza com segurança!"
+                        font.pointSize: 16
+                        color: "black"
+                        anchors.top: textBody1.bottom
+                        anchors.topMargin: 20
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text{
+                        id: textBody3
+                        text: "Tempo de viagem: "
+                        font.pointSize: 20
+                        color: "black"
+                        anchors.top: textBody2.bottom
+                        anchors.topMargin: 50
+                        anchors.left: parent.left
+                        anchors.leftMargin: 210
+                    }
+
+                    Text {
+                        id: textBody4
+                        text: bodyMain.formatTime(bodyMain.timeSeconds)
+                        font.pointSize: 20
+                        font.bold: true
+                        anchors.top: textBody3.top
+                        anchors.left: textBody3.right
+                        anchors.leftMargin: 20
+                    }
+
+                    Text{
+                        id: textBody5
+                        text: "Custo da viagem: "
+                        font.pointSize: 20
+                        color: "black"
+                        anchors.top: textBody3.bottom
+                        anchors.topMargin: 30
+                        anchors.left: parent.left
+                        anchors.leftMargin: 210
+                    }
+
+                    Text {
+                        id: textBody6
+                        text: (bodyMain.timeSeconds * 0.01).toFixed(2) + " \u20AC"
+                        font.pointSize: 20
+                        font.bold: true
+                        anchors.top: textBody5.top
+                        anchors.left: textBody5.right
+                        anchors.leftMargin: 20
+                    }
+
+                    Button {
+                        id: emergencyButton
+                        objectName: "emergencyButton"
+                        text: "Emergência"
+                        font.pointSize: 15
+                        font.bold: true
+                        anchors.top: textBody6.bottom
+                        anchors.topMargin: 60
+                        anchors.left: parent.left
+                        anchors.leftMargin: 250
+                        anchors.right: parent.right
+                        anchors.rightMargin: 250
+                        topPadding: 10
+                        bottomPadding: 10
+                        leftPadding: 10
+                        rightPadding: 10
+                    }
+                }
+
+                // JANELA DE INICIO DE VIAGEM
                 Popup {
                     id: registerUser
                     width: parent.width/2
@@ -436,141 +617,18 @@ ApplicationWindow {
                         rightPadding: 10
                         onClicked: {
                             if (((user.text !== "") && (user.text.length >= 9)) || (user.text === "123456")){
+                                app.myUser = user.text
                                 registerUser.close()
+                                if (app.myUser != "123456"){
+                                    bodyMain.visible = true
+                                }
+                                else if(app.myUser == "123456"){
+                                    bodyBoss.visible = true
+                                }
                             }
                             else{
                                 text3.visible = true
                                 text3Timer.start()
-                            }
-                        }
-                    }
-                }
-
-                Popup {
-                    id: codePopup
-                    width: parent.width/2
-                    height: parent.height - 100
-                    anchors.centerIn: parent
-                    background: Rectangle {
-                        color: "#f3f6f4"
-                        border.color: "#f3f6f4"
-                        border.width: 2
-                        radius: 5
-                    }
-                    modal: true
-                    closePolicy: Popup.NoAutoClose
-
-                    MouseArea {
-                        id: close
-                        width: 40
-                        height: 40
-                        anchors.top: parent.top
-
-                        anchors.right: parent.right
-
-                        onPressed: {codePopup.close(); code.text = "";}
-
-                        Image {
-                            source: "images/icon_close.png"
-                            anchors.centerIn: parent
-                            width: 25
-                            height: 25
-                            fillMode: Image.PreserveAspectFit
-                        }
-                    }
-
-                    Text{
-                        id: text1Code
-                        text: "Desemparelhar o dispositivo"
-                        font.pointSize: 15
-                        color: "black"
-                        anchors.top: parent.top
-                        anchors.topMargin: 40
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        horizontalAlignment: Text.AlignHCenter
-                    }
-
-                    Text{
-                        id: text2Code
-                        text: "Para desemparelhar o dispositivo do veículo atual insira o PIN de desemparelhamento e pressione OK"
-                        font.pointSize: 12
-                        color: "black"
-                        anchors.top: text1Code.bottom
-                        anchors.topMargin: 20
-                        anchors.left: parent.left
-                        anchors.leftMargin: 40
-                        anchors.right: parent.right
-                        anchors.rightMargin: 40
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
-                    }
-
-                    TextField {
-                        id: code
-                        objectName: "code"
-                        placeholderText: "Introduza o PIN"
-                        placeholderTextColor: "black"
-                        color: "black"
-                        font.pointSize: 11
-                        anchors.top: text2Code.bottom
-                        anchors.topMargin: 30
-                        anchors.left: parent.left
-                        anchors.leftMargin: 75
-                        anchors.right: parent.right
-                        anchors.rightMargin: 75
-                        topPadding: 10
-                        bottomPadding: 10
-                        leftPadding: 10
-                        rightPadding: 10
-                    }
-
-                    Text {
-                        id: text3Code
-                        visible: false
-                        text: "Insira o PIN de desemparelhamento correto"
-                        font.pointSize: 10
-                        color: "red"
-                        anchors.bottom: confirmeCodeButton.top
-                        anchors.bottomMargin: 10
-                        anchors.left: parent.left
-                        anchors.leftMargin: 75
-                        anchors.right: parent.right
-                        anchors.rightMargin: 75
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.WordWrap
-                    }
-
-                    Timer {
-                        id: text3CodeTimer
-                        interval: 2000
-                        repeat: false
-                        onTriggered: text3Code.visible = false
-                    }
-
-                    Button {
-                        id: confirmeCodeButton
-                        objectName: "confirmeCodeButton"
-                        text: "OK"
-                        font.pointSize: 11
-                        font.bold: true
-                        anchors.top: code.bottom
-                        anchors.topMargin: 50
-                        anchors.left: parent.left
-                        anchors.leftMargin: 150
-                        anchors.right: parent.right
-                        anchors.rightMargin: 150
-                        topPadding: 10
-                        bottomPadding: 10
-                        leftPadding: 10
-                        rightPadding: 10
-                        onClicked: {
-                            if (code.text === "123456"){
-                                codePopup.close()
-                            }
-                            else{
-                                text3Code.visible = true
-                                text3CodeTimer.start()
                             }
                         }
                     }

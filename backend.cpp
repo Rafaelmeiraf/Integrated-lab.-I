@@ -44,6 +44,14 @@ Backend::Backend(QSettings *settings, QQmlApplicationEngine *engine, QObject *pa
     //######################################################
 
     QString path = QCoreApplication::applicationDirPath();
+
+    QString buildFolder = "build";
+    int index = path.indexOf(buildFolder);
+
+    if (index != -1) {
+        path = path.left(index - 1);
+    }
+
     QString program = path + "/server.exe";
     qDebug() << program;
     QStringList arguments;
@@ -59,7 +67,6 @@ Backend::Backend(QSettings *settings, QQmlApplicationEngine *engine, QObject *pa
        qDebug() << "Server Connected - SUCCESS";
     }
 
-
     //######################################################
     //########### Criar referências para o QML #############
     //######################################################
@@ -72,17 +79,16 @@ Backend::Backend(QSettings *settings, QQmlApplicationEngine *engine, QObject *pa
     m_text_field_plate = engine->rootObjects().at(0)->findChild<QObject*>("plate");
     m_text_field_boss = engine->rootObjects().at(0)->findChild<QObject*>("boss");
     m_text_field_user = engine->rootObjects().at(0)->findChild<QObject*>("user");
-    m_text_field_code = engine->rootObjects().at(0)->findChild<QObject*>("code");
 
     m_button_register = engine->rootObjects().at(0)->findChild<QObject*>("registerButton");
     m_button_register_user = engine->rootObjects().at(0)->findChild<QObject*>("registerUserButton");
-    m_button_desemparelhar = engine->rootObjects().at(0)->findChild<QObject*>("confirmeCodeButton");
-
-    m_popup_register_user = engine->rootObjects().at(0)->findChild<QObject*>("registerUser");
+    m_button_desemparelhar = engine->rootObjects().at(0)->findChild<QObject*>("desemparelharButton");
+    m_button_emergency = engine->rootObjects().at(0)->findChild<QObject*>("emergencyButton");
 
     connect(m_button_register, SIGNAL(clicked()), this, SLOT(readDataRegisterQML()));
     connect(m_button_register_user, SIGNAL(clicked()), this, SLOT(readDataUserQML()));
     connect(m_button_desemparelhar, SIGNAL(clicked()), this, SLOT(desemparelhar()));
+    connect(m_button_emergency, SIGNAL(clicked()), this, SLOT(emergency()));
 
     //######################################################
     //############# Iniciar outras variáveis ###############
@@ -97,7 +103,7 @@ Backend::Backend(QSettings *settings, QQmlApplicationEngine *engine, QObject *pa
 
     m_plate = settings->value("plate", "vazio").toString();
     m_boss = settings->value("boss", "vazio").toString();
-    m_user = "";
+    m_user = "123456";
     qDebug() << settings->value("plate", "plate -> nao atribuido").toString();
     qDebug() << settings->value("boss", "boss -> nao atribuido").toString();
     qDebug() << settings->value("register", "register -> nao atribuido").toString();
@@ -122,8 +128,23 @@ void Backend::readDataSTM() {
                 m_text_field_plate->setProperty("text", "");
                 m_text_field_boss->setProperty("text", "");
                 m_text_field_user->setProperty("text", "");
-                if (m_user != "" || m_user != "123456"){
+                if (m_user != "123456"){
+
+
                     //ENVIAR PARA PYTHON PARA TERMINAR VIAGEM
+
+
+
+                    int index = QRandomGenerator::global()->bounded(20);
+                    qDebug() << "Index:" << index;
+                    if(index >= 0 && index <= 9){
+                        QString data = "buzzer\n";
+                        m_serial->write(data.toUtf8());
+
+                        //ENVIAR PARA PYTHON PARA SINALIZAR OBJETO ESQUECIDO
+                    }
+
+
                 }
             }
             else{
@@ -151,6 +172,11 @@ void Backend::readDataSTM() {
         else if (message == "day"){
             m_stateDay = true;
         }
+        else if (message == "break_window"){
+
+            //ENVIAR PARA PYTHON PARA SINALIZAR VIDRO PARTIDO
+
+        }
     }
 }
 
@@ -159,8 +185,8 @@ void Backend::readDataRegisterQML(){
     QString plate = m_text_field_plate->property("text").toString();
     QString boss = m_text_field_boss->property("text").toString();
 
-    qDebug() << "Texto do Plate:" << plate;
-    qDebug() << "Texto do Boss:" << boss;
+    qDebug() << "Plate:" << plate;
+    qDebug() << "Boss:" << boss;
 
     if (plate != "" && boss != ""){
         m_text_field_plate->setProperty("text", "");
@@ -186,6 +212,7 @@ void Backend::readDataUserQML(){
     m_user = m_text_field_user->property("text").toString();
     m_text_field_user->setProperty("text", "");
     if(m_user != "12345"){
+
         //ENVIAR USER PARA PYTHON PARA INICIAR VIAGEM
     }
     qDebug() << "User:" << m_user;
@@ -197,8 +224,6 @@ void Backend::readDataSocket(){
         QByteArray data = m_socket->readLine();
         QString message = data.trimmed();
         qDebug() << "data Server: " << message;
-
-
     }
 }
 
@@ -240,12 +265,10 @@ void Backend::reconnectSTM(QSerialPort::SerialPortError error){
     if (error == QSerialPort::ResourceError || error == QSerialPort::DeviceNotFoundError) {
         qDebug() << "Erro detectado: " << m_serial->errorString();
 
-        // Fechar a conexão
         if (m_serial->isOpen()) {
             m_serial->close();
         }
 
-        // Iniciar o timer de reconexão
         if (!m_timerReconnect->isActive()) {
             m_timerReconnect->start();
         }
@@ -254,15 +277,11 @@ void Backend::reconnectSTM(QSerialPort::SerialPortError error){
 
 
 void Backend::desemparelhar(){
-    QString code = m_text_field_code->property("text").toString();
-    m_text_field_user->setProperty("text", "");
-
-    if(code == "123456"){
+    if(m_user == "123456"){
+        qDebug() << "DESEMPARELHADO";
         m_settings->setValue("plate", "vazio");
         m_settings->setValue("boss", "vazio");
         m_settings->setValue("register", "false");
-
-        // ENVIAR PARA PYTHON PARA DESVINCULAR CHAT
 
         m_stateRegister = false;
 
@@ -274,3 +293,8 @@ void Backend::desemparelhar(){
 }
 
 
+void Backend::emergency(){
+    qDebug() << "EMERGÊNCIA";
+
+    // ENVIAR PARA PYTHON SINALIZAR EMERGÊNCIA
+}

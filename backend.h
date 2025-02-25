@@ -9,6 +9,7 @@
 #include <QTcpSocket>
 #include <QProcess>
 #include <QCoreApplication>
+#include <QRandomGenerator>
 
 class Backend : public QObject
 {
@@ -28,6 +29,7 @@ private slots:
     void timeoutTimerReconnect();
 
     void desemparelhar();
+    void emergency();
     void reconnectSTM(QSerialPort::SerialPortError error);
 
 private:
@@ -45,11 +47,10 @@ private:
     QObject *m_text_field_plate;
     QObject *m_text_field_boss;
     QObject *m_text_field_user;
-    QObject *m_text_field_code;
     QObject *m_button_register;
     QObject *m_button_register_user;
     QObject *m_button_desemparelhar;
-    QObject *m_popup_register_user;
+    QObject *m_button_emergency;
     QString m_plate;
     QString m_boss;
     QString m_user;
