@@ -54,6 +54,7 @@ private:
     QString m_plate;
     QString m_boss;
     QString m_user;
+    QString m_info;
     QTcpSocket *m_socket;
     QProcess *m_process;
 

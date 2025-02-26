@@ -42,7 +42,7 @@ Backend::Backend(QSettings *settings, QQmlApplicationEngine *engine, QObject *pa
     //######################################################
     //######## Configurar comunicações com exterior ########
     //######################################################
-
+/*
     QString path = QCoreApplication::applicationDirPath();
 
     QString buildFolder = "build";
@@ -58,7 +58,7 @@ Backend::Backend(QSettings *settings, QQmlApplicationEngine *engine, QObject *pa
 
     m_process = new QProcess(parent);
     m_process->start(program, arguments);
-
+*/
     m_socket = new QTcpSocket( this );
     connect(m_socket, SIGNAL(readyRead()), this, SLOT(readDataSocket()) );
 
@@ -104,9 +104,12 @@ Backend::Backend(QSettings *settings, QQmlApplicationEngine *engine, QObject *pa
     m_plate = settings->value("plate", "vazio").toString();
     m_boss = settings->value("boss", "vazio").toString();
     m_user = "123456";
+    m_info = "";
     qDebug() << settings->value("plate", "plate -> nao atribuido").toString();
     qDebug() << settings->value("boss", "boss -> nao atribuido").toString();
     qDebug() << settings->value("register", "register -> nao atribuido").toString();
+    QString info ="000 "  + m_plate  + " " + m_boss + "\n";
+    m_socket->write(info.toUtf8());
 }
 
 
@@ -128,23 +131,25 @@ void Backend::readDataSTM() {
                 m_text_field_plate->setProperty("text", "");
                 m_text_field_boss->setProperty("text", "");
                 m_text_field_user->setProperty("text", "");
+
                 if (m_user != "123456"){
 
-
                     //ENVIAR PARA PYTHON PARA TERMINAR VIAGEM
+                    m_info = "004 " + m_user + "\n";
+                    m_socket->write(m_info.toUtf8());
 
 
-
-                    int index = QRandomGenerator::global()->bounded(20);
+                    int index = QRandomGenerator::global()->bounded(16);
                     qDebug() << "Index:" << index;
-                    if(index >= 0 && index <= 9){
-                        QString data = "buzzer\n";
-                        m_serial->write(data.toUtf8());
+
+                    if(index >= 0 && index <= 8){
+                        m_info = "buzzer\n";
+                        m_serial->write(m_info.toUtf8());
 
                         //ENVIAR PARA PYTHON PARA SINALIZAR OBJETO ESQUECIDO
+                        m_info = "002 " + QString::number(index) + "\n";
+                        m_socket->write(m_info.toUtf8());
                     }
-
-
                 }
             }
             else{
@@ -173,9 +178,11 @@ void Backend::readDataSTM() {
             m_stateDay = true;
         }
         else if (message == "break_window"){
+            qDebug() << "Janela partida";
 
             //ENVIAR PARA PYTHON PARA SINALIZAR VIDRO PARTIDO
-
+            m_info = "003 .\n";
+            m_socket->write(m_info.toUtf8());
         }
     }
 }
@@ -197,6 +204,9 @@ void Backend::readDataRegisterQML(){
         m_settings->setValue("register", "true");
 
         // ENVIAR PARA PYTHON PARA CRIAR CHAT
+        m_info = "000 " + plate + " " + boss + "\n";
+        qDebug() << m_info;
+        m_socket->write(m_info.toUtf8());
 
         m_stateRegister = true;
 
@@ -214,6 +224,8 @@ void Backend::readDataUserQML(){
     if(m_user != "12345"){
 
         //ENVIAR USER PARA PYTHON PARA INICIAR VIAGEM
+        m_info = "004 " + m_user + "\n";
+        m_socket->write(m_info.toUtf8());
     }
     qDebug() << "User:" << m_user;
 }
@@ -295,6 +307,7 @@ void Backend::desemparelhar(){
 
 void Backend::emergency(){
     qDebug() << "EMERGÊNCIA";
-
     // ENVIAR PARA PYTHON SINALIZAR EMERGÊNCIA
+    m_info = "005 .\n";
+    m_socket->write(m_info.toUtf8());
 }
