@@ -386,6 +386,8 @@ ApplicationWindow {
                             timerTrip.stop()
                             timeSeconds = 0
                             textAviso.visible = false
+                            textEmergency.visible = false
+                            emergencyButton.enabled = true
                         }
                     }
 
@@ -421,7 +423,7 @@ ApplicationWindow {
                         visible: false
                         text: "Não tem permissão para desemparelhar o dispositivo"
                         font.pointSize: 13
-                        color: "#b62e2e"
+                        color: "#7f0303"
                         anchors.top: parent.top
                         anchors.topMargin: 10
                         anchors.left: parent.left
@@ -496,6 +498,20 @@ ApplicationWindow {
                         anchors.leftMargin: 20
                     }
 
+                    Text {
+                        id: textEmergency
+                        text: "ATIVOU A EMERGÊNCIA"
+                        visible: false
+                        font.pointSize: 20
+                        font.bold: true
+                        color: "#7f0303"
+                        anchors.bottom: emergencyButton.top
+                        anchors.bottomMargin: 10
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
                     Button {
                         id: emergencyButton
                         objectName: "emergencyButton"
@@ -512,6 +528,7 @@ ApplicationWindow {
                         bottomPadding: 10
                         leftPadding: 10
                         rightPadding: 10
+                        onClicked: { timerTrip.stop(); textEmergency.visible = true; emergencyButton.enabled = false}
                     }
                 }
 

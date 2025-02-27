@@ -221,7 +221,7 @@ void Backend::readDataRegisterQML(){
 void Backend::readDataUserQML(){
     m_user = m_text_field_user->property("text").toString();
     m_text_field_user->setProperty("text", "");
-    if(m_user != "12345"){
+    if(m_user != "123456"){
 
         //ENVIAR USER PARA PYTHON PARA INICIAR VIAGEM
         m_info = "004 " + m_user + "\n";

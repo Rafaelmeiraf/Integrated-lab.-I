@@ -20,7 +20,7 @@ qt_add_qml_module(appTP_Lab_Integrados
         Main.qml
         RESOURCES  images/icon_inicial.png
         SOURCES backend.h backend.cpp
-        RESOURCES images/icon_close.png images/icon_settings.png
+        RESOURCES  images/icon_settings.png
 )
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
